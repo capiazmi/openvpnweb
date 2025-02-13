@@ -176,7 +176,7 @@ copy_config(){
 #
 test_system(){
   message_print_out i "checks if all required programs are installed"
-  for i in openvpn mysql php yarn node unzip wget sed route tar; do
+  for i in openvpn php yarn node unzip wget sed route tar; do
     which $i > /dev/null
     if [ $? -ne 0 ]; then
       message_print_out 0 "${MISSING} ${COL_LIGHT_RED}${i}${COL_NC}! ${INSTALL}"
@@ -313,11 +313,12 @@ collect_param_install_programs(){
   set_openvpn_repo
   message_print_out i "collect install programms"
   if [ "${OS}" == "debian" ]; then
-    autoinstall="openvpn php-mysql php-zip php unzip git wget sed curl git net-tools nodejs"
+    autoinstall="openvpn php-mysql php-zip php unzip git wget sed curl git net-tools nodejs mysql-client"
   elif [ "${OS}" == "centos" ]; then
-    autoinstall="openvpn php php-mysqlnd php-zip php-json unzip git wget sed curl git net-tools tar npm"
+    autoinstall="openvpn php php-mysqlnd php-zip php-json unzip git wget sed curl git net-tools tar npm mysql"
   fi
   message_print_out 1 "collect install programms for ${OS}"
+  install_programs_now
 }
 
 #
@@ -331,6 +332,21 @@ install_programs_now(){
     message_print_out 0 "${BREAK}"
     exit
   fi
+
+  # Check for required packages that test_system() doesn't check
+  required_packages="php mysql yarn node"
+  missing_packages=""
+  for i in $required_packages; do
+    which $i > /dev/null
+    if [ $? -ne 0 ]; then
+      missing_packages="$missing_packages $i"
+    fi
+  done
+  
+  if [ ! -z "$missing_packages" ]; then
+    message_print_out i "Installing missing packages:${COL_LIGHT_RED}${missing_packages}${COL_NC}"
+  fi
+
   message_print_out i "${INFO001}"
   message_print_out i "${INFO002}"  
   message_print_out i "${INFO003}"
@@ -1017,22 +1033,25 @@ main(){
   check_config
 
   #
-  # If all programs are to be installed automatically
-  # @pos018
-  if [[ ${autoinstall} ]]; then
-    install_programs_now
+  # First check if we're installing MySQL server or client
+  # This needs to be done before package installation
+  if [[ ${installsql} = "1" ]]; then
+    set_mysql_rootpw
   fi
 
   #
-  # checks if all required programs are installed
-  # @pos013
-  test_system
+  # Now install all selected packages
+  # @pos018
+  collect_param_install_programs 2
 
   #
-  # If MySQL Server is to be installed locally
-  # @pos020
-  if [[ ${installsql} = "1" ]]; then
-    set_mysql_rootpw
+  # Verify installation succeeded
+  # @pos013
+  test_system
+  if [ $? -eq 1 ]; then
+    message_print_out 0 "Required packages are missing. Installation failed."
+    message_print_out 0 "${BREAK}"
+    exit 1
   fi
 
   #

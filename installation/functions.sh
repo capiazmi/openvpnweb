@@ -31,20 +31,25 @@
 # my Intro with colored Logo
 # @pos004
 #
-intro(){
-  clear
-  NOW=$(date +"%Y")
-  echo -e "${COL_LIGHT_RED}
-■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-${COL_BLUE}        ◢■◤
-      ◢■◤
-    ◢■◤  ${COL_LIGHT_RED} O P E N V P N - ${COL_NC}W E B A D M I N${COL_LIGHT_RED} - S E R V E R${COL_BLUE}
-  ◢■◤                         【ツ】 © 10.000BC - ${NOW}
-◢■■■■■■■■■■■■■■■■■■■■◤             ${COL_LIGHT_RED}L   I   N   U   X
-■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■${COL_NC}
-"
-datum=$(date '+%Y-%m-%d:%H.%M.%S')
-echo ${datum}": Start Install" >> ${CURRENT_PATH}/loginstall.log
+# tests if required programs are installed
+# @callfrom function main
+# @pos013
+#
+test_system(){
+  message_print_out i "checks if all required programs are installed"
+  missing_packages=""
+  for i in openvpn wget sed route tar; do
+    which $i > /dev/null
+    if [ $? -ne 0 ]; then
+      missing_packages="$missing_packages $i"
+    fi
+  done
+  
+  if [ ! -z "$missing_packages" ]; then
+    message_print_out i "Missing packages:${COL_LIGHT_RED}${missing_packages}${COL_NC}"
+    return 1
+  fi
+  return 0
 }
 
 #
