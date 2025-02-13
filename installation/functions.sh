@@ -31,6 +31,12 @@
 # my Intro with colored Logo
 # @pos004
 #
+intro() {
+  message_print_out i "[ OpenVPN-WebAdmin ]"
+  message_print_out i "${BEFOR}"
+  message_print_out r
+}
+
 # tests if required programs are installed
 # @callfrom function main
 # @pos013

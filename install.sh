@@ -563,8 +563,8 @@ y
 y
 EOF
   elif [ "${OS}" == "debian" ]; then
-    echo "grant all on *.* to root@localhost identified by '${DBROOTPW}' with grant option;" | mysql -u root --password="${DBROOTPW}"
-    echo "flush privileges;" | mysql -u root --password="${DBROOTPW}"
+    echo "grant all on *.* to root@localhost identified by '${DBROOTPW}' with grant option;" | mysql "-uroot" "--password=${DBROOTPW}"
+    echo "flush privileges;" | mysql "-uroot" "--password=${DBROOTPW}"
   fi
   control_box $? "set mysql root pw"
 }
@@ -591,7 +591,7 @@ create_database(){
     exit
   fi
    
-  $MYSQL -h ${db_host} -uroot --password=${DBROOTPW} -e "${SQL}"
+  $MYSQL "-h${db_host}" "-uroot" "--password=${DBROOTPW}" -e "${SQL}"
   control_box $? "Create local Database"
 }
 
@@ -605,11 +605,11 @@ create_database(){
 install_mysql_database(){
   message_print_out i "Setup Database"
   # current only new install
-  mysql -h ${db_host} -u ${mysql_user} --password=${mysql_user_pass} ${db_name} < installation/sql/vpnadmin-${VERSION}.dump
+  mysql "-h${db_host}" "-u${mysql_user}" "--password=${mysql_user_pass}" "${db_name}" < installation/sql/vpnadmin-${VERSION}.dump
   control_script_message "Insert Database Dump"
-  mysql -h ${db_host} -u ${mysql_user} --password=${mysql_user_pass} --database=${db_name} -e "INSERT INTO user (user_name, user_pass, gid, user_enable) VALUES ('${admin_user}', encrypt('${admin_user_pass}'),'1','1');"
+  mysql "-h${db_host}" "-u${mysql_user}" "--password=${mysql_user_pass}" "--database=${db_name}" -e "INSERT INTO user (user_name, user_pass, gid, user_enable) VALUES ('${admin_user}', encrypt('${admin_user_pass}'),'1','1');"
   control_script_message "Insert Webadmin User"
-  mysql -h ${db_host} -u ${mysql_user} --password=${mysql_user_pass} --database=${db_name} -e "INSERT INTO user (user_name, user_pass, gid, user_enable) VALUES ('${admin_user}-user', encrypt('${admin_user_pass}'),'2','1');"
+  mysql "-h${db_host}" "-u${mysql_user}" "--password=${mysql_user_pass}" "--database=${db_name}" -e "INSERT INTO user (user_name, user_pass, gid, user_enable) VALUES ('${admin_user}-user', encrypt('${admin_user_pass}'),'2','1');"
   control_script_message "Insert first User"
   message_print_out 1 "setting up MySQL OK"
 }
