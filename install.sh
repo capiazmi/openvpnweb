@@ -117,4 +117,3 @@ test_system(){
   return 0
 }
 
-[Rest of content preserved...]
