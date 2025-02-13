@@ -78,14 +78,6 @@ VERSION="1.4.1"
 #
 collect_param_mysql(){
   message_print_out i "define selectet SQL-Server|SQL-Client"
-  # If the variable xxx already contains a value, it means this function
-  # has been called before. A double installation is not allowed
-  # exit script
-  if [ ${mysqlserver} ]; then
-    message_print_out 0 "${FEHLER01} ${SELECT03} ${FEHLER03} ${SELECT04}. ${ONEONLY}"
-    message_print_out 0 ${BREAK}
-    exit
-  fi
   if [ ${1} = 3 ]; then
     mysqlserver="mariadb-server"
     # Definition whether local server [1] or remote [0]
@@ -194,19 +186,27 @@ test_system(){
 do_select(){
   # nginx fehlt noch
   message_print_out i "give me inputs"
+  # First select MySQL option
+  mysql_sel=$(whiptail --title "${SELECT_A}" --radiolist "${SELECT_B}:" ${r} ${c} ${h} \
+    "3" "${SELECT03} - MySQL Server" on \
+    "4" "${SELECT04} - MySQL Client" off \
+    3>&1 1>&2 2>&3)
+  control_box $? "do_select mysql"
+  
+  # Then select other options
   sel=$(whiptail --title "${SELECT_A}" --checklist --separate-output "${SELECT_B}:" ${r} ${c} ${h} \
     "1" "${SELECT01} " on \
     "2" "${SELECT02} " on \
-    "3" "${SELECT03} " on \
-    "4" "${SELECT04} " off \
     "5" "${SELECT05} " on \
     "11" "${SELECT11} " off \
     "12" "${SELECT12} " off \
     "13" "${SELECT13} " off \
     "20" "${SELECT20} " off \
     3>&1 1>&2 2>&3)
-#  RET=$?
-  control_box $? "do_select"
+  control_box $? "do_select other options"
+  
+  # Add MySQL selection to main selection
+  sel="${mysql_sel}"$'\n'"${sel}"
 }
 
 #
@@ -1033,15 +1033,18 @@ main(){
   check_config
 
   #
-  # First check if we're installing MySQL server or client
-  # This needs to be done before package installation
+  # Now install all selected packages including MySQL
+  # @pos018
+  if [ ! ${mysqlserver} ]; then
+    message_print_out 0 "You think you don't need mysql? Wrong! Let's start again. You have to make a MySQL choice!"
+    message_print_out 0 "${BREAK}"
+    exit 1
+  fi
+
   if [[ ${installsql} = "1" ]]; then
     set_mysql_rootpw
   fi
 
-  #
-  # Now install all selected packages
-  # @pos018
   collect_param_install_programs 2
 
   #
